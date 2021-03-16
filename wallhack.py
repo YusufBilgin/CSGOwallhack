@@ -79,6 +79,32 @@ class Ui_widget(object):
 
 
     def injectScript(self, team, value):
+        pm = pymem.Pymem("csgo.exe")
+        client = pymem.process.module_from_name(pm.process_handle,
+                                                "client.dll").lpBaseOfDll
+
+        if team == "all":
+            try:
+                clientModule = pm.read_bytes(client, client.SizeOfImage)
+                address = client + re.search(rb'\x83\xF8.\x8B\x45\x08\x0F',
+                                            clientModule).start() + x
+
+                pm.write_uchar(address, 2 if pm.read_uchar(address) == 1 else 1)
+                pm.close_process()
+            except:
+                pass
+        else:
+            while True:
+                glow_manager = pm.read_int(client + dwGlowObjectManager)
+
+                for i in range(1, 32):
+                    entity = pm.read_int(client + dwEntityList + i * 0x10)
+
+                    if entity:
+                        entity_team_id = pm-read_int(entity + m_iTeamNum)
+                        entity_glow = pm.read_int(entity + m_iGlowIndex)
+
+
         if team == "enemy":
             pass
         elif team == "counter":
