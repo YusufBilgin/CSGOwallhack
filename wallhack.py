@@ -1,7 +1,15 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
+import pymem.process
+import keyboard
 import pymem
 import time
 import re
+
+dwEntityList = (0x4DA2F24)
+dwLocalPlayer = (0xD8B2DC)
+m_iTeamNum = (0xF4)
+dwGlowObjectManager = (0x52EB518)
+m_iGlowIndex = (0xA438)
 
 
 class Ui_Form(object):
