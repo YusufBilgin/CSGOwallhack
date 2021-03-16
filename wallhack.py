@@ -60,6 +60,24 @@ class Ui_Form(object):
         self.retranslateUi(Form)
         QtCore.QMetaObject.connectSlotsByName(Form)
 
+        self.pushButton.clicked.connect(lambda: self.injectScript("enemy", True))
+        self.pushButton2.clicked.connect(lambda: self.injectScript("enemy", False))
+        self.pushButton3.clicked.connect(lambda: self.injectScript("counter", True))
+        self.pushButton4.clicked.connect(lambda: self.injectScript("counter", False))
+        self.pushButton5.clicked.connect(lambda: self.injectScript("all", True))
+
+
+    def injectScript(self, team, value):
+        if team == "enemy":
+            pass
+        elif team == "counter":
+            pass
+        elif team == "all":
+            pass
+        else:
+            pass
+
+
     def retranslateUi(self, Form):
         _translate = QtCore.QCoreApplication.translate
         Form.setWindowTitle(_translate("Form", "CS:GO Wallhack"))
