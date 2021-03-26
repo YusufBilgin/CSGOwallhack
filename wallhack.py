@@ -122,9 +122,9 @@ class Window(QMainWindow):
         self.groupBox_3 = QGroupBox("Herkez", self)
         self.groupBox_3.setGeometry(QRect(20, 150, 201, 80))
         self.groupBox_3.setObjectName("groupBox_3")
-        self.pushButton_5 = QPushButton("Herkezi saydam mavi yap", self.groupBox_3)
-        self.pushButton_5.setGeometry(QRect(10, 30, 171, 28))
-        self.pushButton_5.setObjectName("pushButton_5")
+        self.makeAllBlueButton = QPushButton("Herkezi saydam mavi yap", self.groupBox_3)
+        self.makeAllBlueButton.setGeometry(QRect(10, 30, 171, 28))
+        self.makeAllBlueButton.setObjectName("pushButton_5")
         self.imageLabel = QLabel("© 2021 | v0.2", self)
         self.imageLabel.setGeometry(QRect(240, 10, 390, 219))
         self.pixmap = QPixmap("img/ekremabi.png")
@@ -155,6 +155,7 @@ class Window(QMainWindow):
         self.terroristEnableButton.clicked.connect(lambda: self.run_script("terrorist"))
         self.counterDisableButton.clicked.connect(lambda: self.stop_thread("counter"))
         self.terroristDisableButton.clicked.connect(lambda: self.stop_thread("terrorist"))
+        self.makeAllBlueButton.clicked.connect(self.make_all_blue)
 
 
     def run_script(self, team):
@@ -201,6 +202,32 @@ class Window(QMainWindow):
             self.ct_worker.ct_continue_run = False
         elif team == "terrorist":
             self.t_worker.t_continue_run = False
+
+    def make_all_blue(self):
+        try:
+            processName='csgo.exe'
+            pm = pymem.Pymem(processName)
+            client = pymem.process.module_from_name(pm.process_handle,'client.dll')
+
+            clientModule = pm.read_bytes(client.lpBaseOfDll, client.SizeOfImage)
+            address = client.lpBaseOfDll + re.search(rb'\x83\xF8.\x8B\x45\x08\x0F',
+                                                  clientModule).start() + 2
+
+            pm.write_uchar(address, 2 if pm.read_uchar(address) == 1 else 1)
+            pm.close_process()
+            self.load_animation()
+
+            print("hack completed")
+
+        except:
+            print("error: couldn't find process",processName)
+
+    def load_animation(self):
+        count = 0
+        while count < 100:
+            count += 10
+            time.sleep(0.1)
+            self.progressBar.setValue(count)
 
 
 app = QApplication(sys.argv)
