@@ -21,6 +21,7 @@ from PyQt5.QtGui import QPixmap
 import pymem.process
 import keyboard
 import pymem
+import time
 import sys
 import re
 
@@ -35,7 +36,7 @@ m_iGlowIndex = (0xA438)
 # worker class
 class Worker(QObject):
     finished = pyqtSignal()
-    progress = pyqtSignal(int)
+    progress = pyqtSignal()
 
     def __init__(self, parent = None):
         QObject.__init__(self, parent = parent)
@@ -46,6 +47,8 @@ class Worker(QObject):
         client = pymem.process.module_from_name(pm.process_handle, "client.dll").lpBaseOfDll
 
         while self.continue_run:
+            time.sleep(1)
+            print(self.continue_run)
             glow_manager = pm.read_int(client + dwGlowObjectManager)
 
             for i in range(1, 32):
@@ -130,29 +133,32 @@ class Window(QMainWindow):
         # Connections
         self.counterEnableButton.clicked.connect(lambda: self.run_script())
         self.terroristEnableButton.clicked.connect(lambda: self.run_script())
+        self.counterDisableButton.clicked.connect(self.stop_thread)
+
 
     def run_script(self):
         self.thread = QThread()
         self.worker = Worker()
         self.worker.moveToThread(self.thread)
 
+        # Signals
         self.thread.started.connect(self.worker.run)
         self.worker.finished.connect(self.thread.quit)
         self.worker.finished.connect(self.worker.deleteLater)
         self.thread.finished.connect(self.thread.deleteLater)
 
         self.thread.start()
-        self.counterDisableButton.clicked.connect(self.stop_thread)
-
 
         self.counterEnableButton.setEnabled(False)
         self.thread.finished.connect(
-            lambda: self.counterDisableButton.setEnabled(True)
+            lambda: self.counterEnableButton.setEnabled(True)
         )
 
     def stop_thread(self):
         print("trying to stop")
         self.worker.continue_run = False
+
+        # thread kapanmiyo
 
 
 app = QApplication(sys.argv)
