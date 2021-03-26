@@ -40,15 +40,14 @@ class Worker(QObject):
 
     def __init__(self, parent = None):
         QObject.__init__(self, parent = parent)
-        self.continue_run = True
+        self.ct_continue_run = True
+        self.t_continue_run = True
 
-    def run(self):
+    def glow_counter(self):
         pm = pymem.Pymem("csgo.exe")
         client = pymem.process.module_from_name(pm.process_handle, "client.dll").lpBaseOfDll
 
-        while self.continue_run:
-            time.sleep(1)
-            print(self.continue_run)
+        while self.ct_continue_run:
             glow_manager = pm.read_int(client + dwGlowObjectManager)
 
             for i in range(1, 32):
@@ -61,6 +60,27 @@ class Worker(QObject):
                         pm.write_float(glow_manager + entity_glow * 0x38 + 0x4, float(1))
                         pm.write_float(glow_manager + entity_glow * 0x38 + 0x8, float(0))
                         pm.write_float(glow_manager + entity_glow * 0x38 + 0xC, float(0))
+                        pm.write_float(glow_manager + entity_glow * 0x38 + 0x10, float(1))
+                        pm.write_int(glow_manager + entity_glow * 0x38 + 0x24, 1)
+        self.finished.emit()
+
+    def glow_terrorist(self):
+        pm = pymem.Pymem("csgo.exe")
+        client = pymem.process.module_from_name(pm.process_handle, "client.dll").lpBaseOfDll
+
+        while self.t_continue_run:
+            glow_manager = pm.read_int(client + dwGlowObjectManager)
+
+            for i in range(1, 32):
+                entity = pm.read_int(client + dwEntityList + i * 0x10)
+
+                if entity:
+                    entity_team_id = pm.read_int(entity + m_iTeamNum)
+                    entity_glow = pm.read_int(entity + m_iGlowIndex)
+                    if entity_team_id == 3:
+                        pm.write_float(glow_manager + entity_glow * 0x38 + 0x4, float(0))
+                        pm.write_float(glow_manager + entity_glow * 0x38 + 0x8, float(0))
+                        pm.write_float(glow_manager + entity_glow * 0x38 + 0xC, float(1))
                         pm.write_float(glow_manager + entity_glow * 0x38 + 0x10, float(1))
                         pm.write_int(glow_manager + entity_glow * 0x38 + 0x24, 1)
         self.finished.emit()
@@ -131,34 +151,46 @@ class Window(QMainWindow):
         self.label_2.setObjectName("label_2")
 
         # Connections
-        self.counterEnableButton.clicked.connect(lambda: self.run_script())
-        self.terroristEnableButton.clicked.connect(lambda: self.run_script())
-        self.counterDisableButton.clicked.connect(self.stop_thread)
+        self.counterEnableButton.clicked.connect(lambda: self.run_script("counter"))
+        self.terroristEnableButton.clicked.connect(lambda: self.run_script("terrorist"))
+        self.counterDisableButton.clicked.connect(lambda: self.stop_thread("counter"))
+        self.terroristDisableButton.clicked.connect(lambda: self.stop_thread("terrorist"))
 
 
-    def run_script(self):
+    def run_script(self, team):
         self.thread = QThread()
         self.worker = Worker()
         self.worker.moveToThread(self.thread)
 
         # Signals
-        self.thread.started.connect(self.worker.run)
+        if team == "counter":
+            self.thread.started.connect(self.worker.glow_counter)
+        elif team == "terrorist":
+            self.thread.started.connect(self.worker.glow_terrorist)
         self.worker.finished.connect(self.thread.quit)
         self.worker.finished.connect(self.worker.deleteLater)
         self.thread.finished.connect(self.thread.deleteLater)
 
         self.thread.start()
 
-        self.counterEnableButton.setEnabled(False)
-        self.thread.finished.connect(
-            lambda: self.counterEnableButton.setEnabled(True)
-        )
+        # enable & disable button
+        if team == "counter":
+            self.counterEnableButton.setEnabled(False)
+            self.thread.finished.connect(
+                lambda: self.counterEnableButton.setEnabled(True)
+            )
+        elif team == "terrorist":
+            self.terroristEnableButton.setEnabled(False)
+            self.thread.finished.connect(
+                lambda: self.terroristEnableButton.setEnabled(True)
+            )
 
-    def stop_thread(self):
-        print("trying to stop")
-        self.worker.continue_run = False
-
-        # thread kapanmiyo
+    def stop_thread(self, team):
+        # print("trying to stop")
+        if team == "counter":
+            self.worker.ct_continue_run = False
+        elif team == "terrorist":
+            self.worker.t_continue_run = False
 
 
 app = QApplication(sys.argv)
