@@ -56,10 +56,10 @@ class Worker(QObject):
                 if entity:
                     entity_team_id = pm.read_int(entity + m_iTeamNum)
                     entity_glow = pm.read_int(entity + m_iGlowIndex)
-                    if entity_team_id == 2:
-                        pm.write_float(glow_manager + entity_glow * 0x38 + 0x4, float(1))
+                    if entity_team_id == 3:
+                        pm.write_float(glow_manager + entity_glow * 0x38 + 0x4, float(0))
                         pm.write_float(glow_manager + entity_glow * 0x38 + 0x8, float(0))
-                        pm.write_float(glow_manager + entity_glow * 0x38 + 0xC, float(0))
+                        pm.write_float(glow_manager + entity_glow * 0x38 + 0xC, float(1))
                         pm.write_float(glow_manager + entity_glow * 0x38 + 0x10, float(1))
                         pm.write_int(glow_manager + entity_glow * 0x38 + 0x24, 1)
         self.finished.emit()
@@ -77,10 +77,10 @@ class Worker(QObject):
                 if entity:
                     entity_team_id = pm.read_int(entity + m_iTeamNum)
                     entity_glow = pm.read_int(entity + m_iGlowIndex)
-                    if entity_team_id == 3:
-                        pm.write_float(glow_manager + entity_glow * 0x38 + 0x4, float(0))
+                    if entity_team_id == 2:
+                        pm.write_float(glow_manager + entity_glow * 0x38 + 0x4, float(1))
                         pm.write_float(glow_manager + entity_glow * 0x38 + 0x8, float(0))
-                        pm.write_float(glow_manager + entity_glow * 0x38 + 0xC, float(1))
+                        pm.write_float(glow_manager + entity_glow * 0x38 + 0xC, float(0))
                         pm.write_float(glow_manager + entity_glow * 0x38 + 0x10, float(1))
                         pm.write_int(glow_manager + entity_glow * 0x38 + 0x24, 1)
         self.finished.emit()
@@ -101,7 +101,7 @@ class Window(QMainWindow):
         self.setMaximumSize(QSize(637, 339))
 
         # create widgets
-        self.groupBox = QGroupBox("Bizim Takım", self)
+        self.groupBox = QGroupBox("Counter Strike", self)
         self.groupBox.setGeometry(QRect(20, 240, 241, 91))
         self.groupBox.setObjectName("groupBox")
         self.counterEnableButton = QPushButton("fosforlu", self.groupBox)
@@ -110,7 +110,7 @@ class Window(QMainWindow):
         self.counterDisableButton = QPushButton("Normal", self.groupBox)
         self.counterDisableButton.setGeometry(QRect(120, 40, 93, 28))
         self.counterDisableButton.setObjectName("pushButton_2")
-        self.groupBox_2 = QGroupBox("Düşman Takım", self)
+        self.groupBox_2 = QGroupBox("Terörist", self)
         self.groupBox_2.setGeometry(QRect(280, 240, 241, 91))
         self.groupBox_2.setObjectName("groupBox_2")
         self.terroristEnableButton = QPushButton("fosforlu", self.groupBox_2)
@@ -158,39 +158,49 @@ class Window(QMainWindow):
 
 
     def run_script(self, team):
-        self.thread = QThread()
-        self.worker = Worker()
-        self.worker.moveToThread(self.thread)
-
-        # Signals
         if team == "counter":
-            self.thread.started.connect(self.worker.glow_counter)
-        elif team == "terrorist":
-            self.thread.started.connect(self.worker.glow_terrorist)
-        self.worker.finished.connect(self.thread.quit)
-        self.worker.finished.connect(self.worker.deleteLater)
-        self.thread.finished.connect(self.thread.deleteLater)
+            # create worker object
+            self.ct_thread = QThread()
+            self.ct_worker = Worker()
+            self.ct_worker.moveToThread(self.ct_thread)
 
-        self.thread.start()
+            # Signals
+            self.ct_thread.started.connect(self.ct_worker.glow_counter)
+            self.ct_worker.finished.connect(self.ct_thread.quit)
+            self.ct_worker.finished.connect(self.ct_worker.deleteLater)
+            self.ct_thread.finished.connect(self.ct_thread.deleteLater)
 
-        # enable & disable button
-        if team == "counter":
+            self.ct_thread.start()
+
             self.counterEnableButton.setEnabled(False)
-            self.thread.finished.connect(
+            self.ct_thread.finished.connect(
                 lambda: self.counterEnableButton.setEnabled(True)
             )
         elif team == "terrorist":
+            # create worker object
+            self.t_thread = QThread()
+            self.t_worker = Worker()
+            self.t_worker.moveToThread(self.t_thread)
+
+            # Signals
+            self.t_thread.started.connect(self.t_worker.glow_terrorist)
+            self.t_worker.finished.connect(self.t_thread.quit)
+            self.t_worker.finished.connect(self.t_worker.deleteLater)
+            self.t_thread.finished.connect(self.t_thread.deleteLater)
+
+            self.t_thread.start()
+
             self.terroristEnableButton.setEnabled(False)
-            self.thread.finished.connect(
+            self.t_thread.finished.connect(
                 lambda: self.terroristEnableButton.setEnabled(True)
             )
 
     def stop_thread(self, team):
         # print("trying to stop")
         if team == "counter":
-            self.worker.ct_continue_run = False
+            self.ct_worker.ct_continue_run = False
         elif team == "terrorist":
-            self.worker.t_continue_run = False
+            self.t_worker.t_continue_run = False
 
 
 app = QApplication(sys.argv)
