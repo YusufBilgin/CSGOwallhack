@@ -172,6 +172,7 @@ class Window(QMainWindow):
             self.ct_thread.finished.connect(self.ct_thread.deleteLater)
 
             self.ct_thread.start()
+            self.load_animation()
 
             self.counterEnableButton.setEnabled(False)
             self.ct_thread.finished.connect(
@@ -190,6 +191,7 @@ class Window(QMainWindow):
             self.t_thread.finished.connect(self.t_thread.deleteLater)
 
             self.t_thread.start()
+            self.load_animation()
 
             self.terroristEnableButton.setEnabled(False)
             self.t_thread.finished.connect(
