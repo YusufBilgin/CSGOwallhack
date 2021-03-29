@@ -1,4 +1,9 @@
 dist/
 v0.2/
+__pycache__/
+build/
+sürüm2/
+dist/
 wallhack2.py
+wallhack2.spec
 wh3.py
