@@ -20,17 +20,21 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtGui import QPixmap
 import pymem.process
 import keyboard
+import requests
 import pymem
 import time
 import sys
 import re
 
+offsets = "https://raw.githubusercontent.com/YusufBilgin/CSGOwallhack/master/offsets.json"
+response = requests.get(offsets).json()
+
 # csgo offsets
-dwEntityList = (0x4DA3F44)
-dwLocalPlayer = (0xD8C2CC)
-m_iTeamNum = (0xF4)
-dwGlowObjectManager = (0x52EC558)
-m_iGlowIndex = (0xA438)
+dwEntityList = int(response["dwEntityList"])
+dwLocalPlayer = int(response["dwLocalPlayer"])
+m_iTeamNum = int(response["m_iTeamNum"])
+dwGlowObjectManager = int(response["dwGlowObjectManager"])
+m_iGlowIndex = int(response["m_iGlowIndex"])
 
 
 # worker class
